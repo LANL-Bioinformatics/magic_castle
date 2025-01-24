@@ -1,3 +1,4 @@
+terraform.tfvars
 os_venv/*
 .terraform
 */.terraform
