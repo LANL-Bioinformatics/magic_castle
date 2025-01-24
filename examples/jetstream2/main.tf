@@ -152,10 +152,23 @@ variable "software_stack" {
   default = "alliance"
 }
 
+# edge variables
+variable "edge_app_server_ip" {
+  type = string
+  description = "ip address of the application server; will be added to magic castle security group"
+  default = ""
+}
+
+variable "edge_mysql_secgroup" {
+  type = string
+  description = "name of security group to add rule for magic castle"
+  default = ""
+}
+
 module "openstack" {
   source         = "./openstack"
   config_git_url = "https://github.com/ComputeCanada/puppet-magic_castle.git"
-  config_version = "13.5.0"
+  config_version = "14.1.2"
 
   cluster_name = var.instance_name
   domain       = lower("${var.project}.${var.domain_name}")
@@ -349,6 +362,29 @@ data "openstack_networking_network_v2" "int_network" {
 data "openstack_networking_subnet_v2" "subnet" {
   network_id = data.openstack_networking_network_v2.int_network.id
   ip_version = 4
+}
+
+# this adds a rule to open security group to the mysql server
+data "openstack_networking_secgroup_v2" "global" {
+  name = "${module.openstack.cluster_name}-secgroup-login"
+  depends_on = [module.openstack.public_ip]
+}
+
+resource openstack_networking_secgroup_rule_v2 "tcp" {
+  count = var.edge_app_server_ip == "" ? 0 : 1
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = 1
+  port_range_max    = 65335
+  description       = "open security group to mysql"
+  security_group_id = data.openstack_networking_secgroup_v2.global.id
+  remote_ip_prefix  = "${var.edge_app_server_ip}/32"
+}
+
+data "openstack_networking_secgroup_v2" "mysql-secgroup" {
+  count = var.edge_mysql_secgroup == "" ? 0 : 1
+  name = var.edge_mysql_secgroup
 }
 
 

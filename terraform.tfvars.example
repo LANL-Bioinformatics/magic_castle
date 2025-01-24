@@ -1,0 +1,38 @@
+# NOTE: before using terraform apply, you'll need to do the following
+#   eval `ssh-agent`
+#   ssh-add
+
+# for testing, use your access-ci username
+username="someuser"
+# use your allocation id
+project="BIOXXXXXX"
+# this must be dns compliant name and not too long
+instance_name="insert-cluster-name"
+# number of guest users
+guest_users_count=2
+# guest user password
+guest_users_password="some-PASSWORD-change1234"
+# these are whitelist for fail2ban
+# cacao_whitelist_ips="'1.1.1.2','w1.x1.y1.z2','w2.x2.y2.z2'"
+cacao_user_data = <<-EOT
+users:
+    - default
+    - name: someuser
+      shell: /bin/bash
+      sudo: ALL=(ALL) NOPASSWD:ALL
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAAAC3Nza313C1lZDI1NTE5A341AAAIBYkujKi2kcfs2aD5ayj3RqwRpJhe2TapADjTLCF5cUDmtv root@somekey
+EOT
+
+
+image_name="Featured-RockyLinux9"
+mgmt_flavor="m3.large"
+# mgmt_count=1
+login_flavor="m3.large"
+# login_count=1
+node_flavor="m3.large"
+software_stack=""
+# nfs_project_snapshot_id="e8c0b519-49d9-4bd8-8482-654e34a1e62f"
+# nfs_project_size=500
+# this currently assumes edge app server is created separate -- is this true?
+edge_app_server_ip="w.x.y.z"
